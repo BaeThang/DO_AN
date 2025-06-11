@@ -82,7 +82,7 @@
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" for="nameTrain">Tên Chuyến Xe <span class="text-lime-400">*</span></label>
                     <div class="relative">
                         <input type="text" id="nameTrain" name="NameTrain" class="w-full pt-3 pb-3 pr-3 pl-10 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-lime-400" 
-                               required minlength="2" pattern="[A-Za-z0-9\s]+" title="Tên chuyến xe chỉ chứa chữ cái, số và khoảng trắng" placeholder="Nhập tên chuyến xe" />
+                               required minlength="2" pattern="^[\p{L}\p{N}\s]+$" title="Tên chuyến xe chỉ chứa chữ cái, số và khoảng trắng" placeholder="Nhập tên chuyến xe" />
                         <svg class="absolute left-3 top-1/3 -translate-y-1/2 w-5 h-5 text-lime-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                         </svg>
@@ -238,7 +238,10 @@
             coefficientTrainError.classList.add('hidden');
             idTrainRouteError.classList.add('hidden');
 
-            if (!nameTrain.value.match(/^[A-Za-z0-9\s]+$/)) {
+            // Regex cho Unicode letters, numbers, spaces
+            const unicodeNamePattern = /^[\p{L}\p{N}\s]+$/u;
+
+            if (!nameTrain.value || !unicodeNamePattern.test(nameTrain.value)) {
                 nameTrainError.textContent = 'Tên chuyến xe chỉ chứa chữ cái, số và khoảng trắng';
                 nameTrainError.classList.remove('hidden');
                 isValid = false;

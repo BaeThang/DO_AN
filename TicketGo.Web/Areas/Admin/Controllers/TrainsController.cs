@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authorization;
 using System;
 using System.Threading.Tasks;
 using System.Linq;
+using System.Text.RegularExpressions;
 
 namespace TicketGo.Web.Areas.Admin.Controllers
 {   
@@ -43,7 +44,7 @@ namespace TicketGo.Web.Areas.Admin.Controllers
             {
                 ModelState.AddModelError("NameTrain", "Tên chuyến xe không được để trống");
             }
-            else if (!trainDto.NameTrain.All(c => char.IsLetterOrDigit(c) || char.IsWhiteSpace(c)))
+            else if (!Regex.IsMatch(trainDto.NameTrain, @"^[\p{L}\p{N}\s]+$"))
             {
                 ModelState.AddModelError("NameTrain", "Tên chuyến xe chỉ được chứa chữ cái, số và khoảng trắng");
             }

@@ -27,7 +27,7 @@ namespace TicketGo.Infrastructure.Data
 
             if (!optionsBuilder.IsConfigured)
             {
-                optionsBuilder.UseSqlServer("Data Source=THANHTAN;Initial Catalog=TicketGoV2;Integrated Security=True");
+                optionsBuilder.UseSqlServer("Data Source=BAETHANG;Initial Catalog=TicketGoV2;Integrated Security=True");
             }
         }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
