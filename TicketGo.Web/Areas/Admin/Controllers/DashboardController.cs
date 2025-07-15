@@ -10,12 +10,31 @@ namespace TicketGo.Web.Areas.Admin.Controllers
     [Area("admin")]
     public class DashboardController : Controller
     {
-        public DashboardController()
-        { }
+        private readonly IDashboardService _dashboardService;
 
-        public IActionResult Dashboard()
+        public DashboardController(IDashboardService dashboardService)
         {
-            return View();
+            _dashboardService = dashboardService;
+        }
+
+        public async Task<IActionResult> Dashboard()
+        {
+            var statistics = await _dashboardService.GetDashboardStatisticsAsync();
+            return View(statistics);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetMonthlyRevenue(int year)
+        {
+            var monthlyData = await _dashboardService.GetMonthlyRevenueAsync(year);
+            return Json(monthlyData);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetDailyRevenue(DateTime fromDate, DateTime toDate)
+        {
+            var dailyData = await _dashboardService.GetDailyRevenueAsync(fromDate, toDate);
+            return Json(dailyData);
         }
     }
 }
