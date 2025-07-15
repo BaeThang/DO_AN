@@ -150,59 +150,72 @@
         const seatSelection = document.getElementById('seat-selection');
         const selectedSeatsContainer = document.getElementById('selected-seats');
         const totalColumns = 4;
-        const seatsPerColumn = 22;
+        const totalSeats = @Model.TotalSeats;
         const occupiedSeats = @Html.Raw(Json.Serialize(Model.OccupiedSeats.Select(s => s.NameSeat).ToList()));
         const ticketPrice = @Model.Price;
+        
+        // Claim system - ghế được giữ trong 3 phút
+        const claimedSeats = new Map(); // Map lưu trữ ghế đã claim và thời gian claim
+        const CLAIM_DURATION = 3 * 60 * 1000; // 3 phút tính bằng milliseconds
 
         // Gỡ lỗi ghế đã đặt
         console.log('Ghế đã đặt:', occupiedSeats);
+        console.log('Tổng số ghế:', totalSeats);
+        console.log('Tổng số cột:', totalColumns);
 
         function createSeat(nameSeat, label) {
             const seat = document.createElement('div');
             seat.classList.add('w-12', 'h-12', 'rounded-md', 'border', 'border-gray-300', 'dark:border-gray-600', 'flex', 'items-center', 'justify-center', 'text-sm', 'cursor-pointer', 'transition');
-            if (occupiedSeats.includes(nameSeat)) {
+            
+            // Kiểm tra trạng thái ghế
+            if (occupiedSeats.includes(nameSeat) || isClaimedSeat(nameSeat)) {
                 seat.classList.add('bg-gray-500', 'text-white', 'cursor-not-allowed');
+                seat.title = 'Ghế đã được đặt';
             } else {
                 seat.classList.add('bg-gray-200', 'dark:bg-gray-600', 'text-gray-700', 'dark:text-white');
+                seat.title = 'Ghế trống - Nhấn để chọn';
             }
+            
             seat.id = nameSeat;
             seat.innerText = label;
-            seat.addEventListener('click', () => {
-                if (!seat.classList.contains('bg-gray-500')) {
-                    seat.classList.toggle('bg-lime-400');
-                    seat.classList.toggle('text-white');
-                    console.log(`Đã chuyển đổi ghế: ${nameSeat}`);
-                    updateSelectedSeats();
-                    updateTotalPrice();
-                }
-            });
+            seat.addEventListener('click', () => handleSeatClick(seat, nameSeat));
             return seat;
         }
 
         function renderSeats() {
             seatSelection.innerHTML = '';
-            let count = 0;
-            for (let col = 1; col <= totalColumns; col++) {
+            
+            // Tính số hàng dựa trên tổng số ghế và số cột
+            const totalRows = Math.ceil(totalSeats / totalColumns);
+            
+            // Tạo các cột trước
+            const columns = [];
+            for (let col = 0; col < totalColumns; col++) {
                 const seatColumn = document.createElement('div');
                 seatColumn.classList.add('flex', 'flex-col', 'gap-2');
-                if (col === 1 || col === 3) {
-                    for (let row = 1; row <= seatsPerColumn; row += 2) {
-                        let seatLabel = col === 1 ? `A${row}` : `B${row}`;
-                        count += 1;
-                        let nameSeat = `Seat_${count}`;
-                        seatColumn.appendChild(createSeat(nameSeat, seatLabel));
-                    }
-                }
-                if (col === 2 || col === 4) {
-                    for (let row = 2; row <= seatsPerColumn; row += 2) {
-                        let seatLabel = col === 2 ? `A${row}` : `B${row}`;
-                        count += 1;
-                        let nameSeat = `Seat_${count}`;
-                        seatColumn.appendChild(createSeat(nameSeat, seatLabel));
-                    }
-                }
+                columns.push(seatColumn);
                 seatSelection.appendChild(seatColumn);
             }
+            
+            // Điền ghế theo hàng
+            let seatCount = 0;
+            for (let row = 0; row < totalRows; row++) {
+                for (let col = 0; col < totalColumns; col++) {
+                    if (seatCount < totalSeats) {
+                        seatCount++;
+                        let seatLabel = getSeatLabel(row + 1, col + 1);
+                        let nameSeat = `Seat_${seatCount}`;
+                        columns[col].appendChild(createSeat(nameSeat, seatLabel));
+                    }
+                }
+            }
+        }
+        
+        function getSeatLabel(row, col) {
+            // Tạo nhãn ghế theo pattern A1, B1, C1, D1, A2, B2, C2, D2...
+            const letters = ['A', 'B', 'C', 'D'];
+            const letter = letters[col - 1] || 'X';
+            return `${letter}${row}`;
         }
 
         function updateSelectedSeats() {
@@ -215,6 +228,8 @@
                 seatTag.addEventListener('click', () => {
                     seat.classList.remove('bg-lime-400', 'text-white');
                     seat.classList.add('bg-gray-200', 'dark:bg-gray-600', 'text-gray-700', 'dark:text-white');
+                    seat.title = 'Ghế trống - Nhấn để chọn';
+                    unclaimSeat(seat.id);
                     updateSelectedSeats();
                     updateTotalPrice();
                 });
@@ -264,6 +279,11 @@
 
             if (!isValid) return;
 
+            // Khi đặt vé thành công, bỏ claim các ghế đã chọn
+            selectedSeats.forEach(seat => {
+                unclaimSeat(seat.id);
+            });
+
             const selectedSeatsList = Array.from(selectedSeats).map(seat => seat.id);
             document.getElementById('selected-seats-input').value = JSON.stringify(selectedSeatsList);
             form.submit();
@@ -271,12 +291,115 @@
 
         function clearAllSelections() {
             document.querySelectorAll('#seat-selection .bg-lime-400').forEach(seat => {
+                const nameSeat = seat.id;
                 seat.classList.remove('bg-lime-400', 'text-white');
                 seat.classList.add('bg-gray-200', 'dark:bg-gray-600', 'text-gray-700', 'dark:text-white');
+                seat.title = 'Ghế trống - Nhấn để chọn';
+                unclaimSeat(nameSeat);
             });
             updateSelectedSeats();
             updateTotalPrice();
         }
+
+        // Claim system functions
+        function isClaimedSeat(nameSeat) {
+            const claimTime = claimedSeats.get(nameSeat);
+            if (!claimTime) return false;
+            
+            const now = Date.now();
+            if (now - claimTime > CLAIM_DURATION) {
+                claimedSeats.delete(nameSeat);
+                return false;
+            }
+            return true;
+        }
+
+        function claimSeat(nameSeat) {
+            claimedSeats.set(nameSeat, Date.now());
+            
+            // Tự động bỏ claim sau 3 phút
+            setTimeout(() => {
+                claimedSeats.delete(nameSeat);
+                refreshSeats();
+            }, CLAIM_DURATION);
+        }
+
+        function unclaimSeat(nameSeat) {
+            claimedSeats.delete(nameSeat);
+        }
+
+        function handleSeatClick(seat, nameSeat) {
+            // Kiểm tra nếu ghế đã được đặt thực sự hoặc đang được claim bởi người khác
+            if (occupiedSeats.includes(nameSeat) || isClaimedSeat(nameSeat)) {
+                if (isClaimedSeat(nameSeat) && !seat.classList.contains('bg-lime-400')) {
+                    toastr.warning('Ghế này đang được đặt bởi người khác');
+                }
+                return;
+            }
+            
+            // Nếu ghế đang được chọn, bỏ chọn
+            if (seat.classList.contains('bg-lime-400')) {
+                seat.classList.remove('bg-lime-400', 'text-white');
+                seat.classList.add('bg-gray-200', 'dark:bg-gray-600', 'text-gray-700', 'dark:text-white');
+                seat.title = 'Ghế trống - Nhấn để chọn';
+                unclaimSeat(nameSeat);
+            } else {
+                // Chọn ghế và claim (hiển thị như ghế đã đặt cho người khác)
+                seat.classList.remove('bg-gray-200', 'dark:bg-gray-600', 'text-gray-700', 'dark:text-white');
+                seat.classList.add('bg-lime-400', 'text-white');
+                seat.title = 'Ghế đang chọn - Nhấn để bỏ chọn';
+                claimSeat(nameSeat);
+            }
+            
+            updateSelectedSeats();
+            updateTotalPrice();
+        }
+
+        function refreshSeats() {
+            const allSeats = document.querySelectorAll('#seat-selection .w-12');
+            let needsUpdate = false;
+            
+            allSeats.forEach(seat => {
+                const nameSeat = seat.id;
+                
+                // Bỏ qua ghế đã được đặt thực sự
+                if (occupiedSeats.includes(nameSeat)) {
+                    return;
+                }
+                
+                // Kiểm tra ghế đang được chọn - nếu hết hạn claim thì bỏ chọn
+                if (seat.classList.contains('bg-lime-400')) {
+                    if (!isClaimedSeat(nameSeat)) {
+                        // Ghế đang chọn nhưng hết hạn claim - bỏ chọn
+                        seat.classList.remove('bg-lime-400', 'text-white');
+                        seat.classList.add('bg-gray-200', 'dark:bg-gray-600', 'text-gray-700', 'dark:text-white');
+                        seat.title = 'Ghế trống - Nhấn để chọn';
+                        needsUpdate = true;
+                    }
+                    return;
+                }
+                
+                // Kiểm tra nếu ghế đang được claim bởi người khác
+                if (isClaimedSeat(nameSeat)) {
+                    seat.classList.remove('bg-gray-200', 'dark:bg-gray-600', 'text-gray-700', 'dark:text-white');
+                    seat.classList.add('bg-gray-500', 'text-white', 'cursor-not-allowed');
+                    seat.title = 'Ghế đã được đặt';
+                } else {
+                    seat.classList.remove('bg-gray-500', 'text-white', 'cursor-not-allowed');
+                    seat.classList.add('bg-gray-200', 'dark:bg-gray-600', 'text-gray-700', 'dark:text-white');
+                    seat.title = 'Ghế trống - Nhấn để chọn';
+                }
+            });
+            
+            // Update UI if needed
+            if (needsUpdate) {
+                updateSelectedSeats();
+                updateTotalPrice();
+            }
+        }
+
+        // Refresh seats every 30 seconds to check for expired claims
+        setInterval(refreshSeats, 30000);
 
         document.addEventListener('DOMContentLoaded', renderSeats);
     </script>

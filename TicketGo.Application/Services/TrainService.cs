@@ -44,6 +44,10 @@ namespace TicketGo.Application.Services
             var trainDtos = pagedTrains.Items.Select(train =>
             {
                 var coach = train.Coaches.FirstOrDefault(c => request.LoaiXe.Count == 0 || request.LoaiXe.Contains(c.Category));
+                var basicPrice = (decimal)(coach?.BasicPrice ?? 0);
+                var coefficientTrain = (decimal)(train.CoefficientTrain ?? 1);
+                var finalPrice = coefficientTrain * basicPrice;
+                
                 return new TrainResponseDto
                 {
                     Id = train.IdTrain,
@@ -51,9 +55,9 @@ namespace TicketGo.Application.Services
                     NoiDi = train.IdTrainRouteNavigation?.PointStart ?? "N/A",
                     NoiDen = train.IdTrainRouteNavigation?.PointEnd ?? "N/A",
                     GioKhoiHanh = train.DateStart.HasValue ? train.DateStart.Value : default(DateTime),
-                    GiaVe = coach != null ? (decimal?)coach.BasicPrice : null,
+                    GiaVe = coach != null ? finalPrice : null,
                     LoaiXe = coach?.Category ?? "N/A",
-                    CoachID = coach.IdCoach 
+                    CoachID = coach?.IdCoach ?? 0
                 };
             }).ToList();
 

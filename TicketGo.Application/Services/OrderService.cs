@@ -72,13 +72,13 @@ namespace TicketGo.Application.Services
         public async Task<OrderTicketDto> GetOrderTicketDetailsAsync(int idCoach)
         {
             var coach = await _coachRepository.GetCoachWithRelatedDataAsync(idCoach);
-            if (coach == null)
+            if (coach == null || coach.IdTrainNavigation == null)
             {
-                return null;
+                return null!;
             }
 
             var occupiedSeats = coach.Seats.Where(s => s.State).ToList();
-            var coachCategory = coach.Category;
+            var coachCategory = coach.Category ?? string.Empty;
             var ticketPrice = CalculateTicketPrice(coach.IdTrainNavigation);
 
             return CreateOrderTicketDto(coach, occupiedSeats, coachCategory, ticketPrice);
@@ -142,16 +142,19 @@ namespace TicketGo.Application.Services
         private OrderTicketDto CreateOrderTicketDto(Coach coach, List<Seat> occupiedSeats, string coachCategory, decimal ticketPrice)
         {
             var train = coach.IdTrainNavigation;
+            var totalSeats = coach.SeatsQuantity ?? 0;
+            
             return new OrderTicketDto
             {
-                Train = train,
-                IdTrain = train.IdTrain,
+                Train = train ?? new Train(),
+                IdTrain = train?.IdTrain ?? 0,
                 OccupiedSeats = occupiedSeats,
-                PointStart = train.IdTrainRouteNavigation.PointStart,
-                PointEnd = train.IdTrainRouteNavigation.PointEnd,
-                DateStart = train.DateStart?.ToShortDateString(),
+                PointStart = train?.IdTrainRouteNavigation?.PointStart ?? string.Empty,
+                PointEnd = train?.IdTrainRouteNavigation?.PointEnd ?? string.Empty,
+                DateStart = train?.DateStart?.ToShortDateString() ?? string.Empty,
                 Price = ticketPrice,
-                VehicleType = coachCategory
+                VehicleType = coachCategory,
+                TotalSeats = totalSeats
             };
         }
 
