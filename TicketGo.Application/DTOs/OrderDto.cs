@@ -15,5 +15,12 @@ namespace TicketGo.Application.DTOs
         public int? IdAccount { get; set; }
         public int? IdCoach { get; set; } // Thêm để lưu IdCoach
         public List<string> ListSeats { get; set; } = new List<string>(); // Thêm để lưu danh sách ghế
+        
+        // Thêm thông tin tuyến đường và tàu
+        public string? PointStart { get; set; }
+        public string? PointEnd { get; set; }
+        public string? TrainName { get; set; }
+        public DateTime? DepartureTime { get; set; }
+        public string? Status { get; set; } // Trạng thái vé: "Active", "Cancelled", "Used"
     }
 }

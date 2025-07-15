@@ -69,6 +69,22 @@ namespace TicketGo.Infrastructure.Repositories
             await _context.SaveChangesAsync();
         }
 
+        public async Task<List<Order>> GetOrdersByAccountIdAsync(int accountId)
+        {
+            return await _context.Orders
+                .Include(o => o.IdAccountNavigation)
+                .Include(o => o.IdDiscountNavigation)
+                .Include(o => o.OrderTickets)
+                    .ThenInclude(ot => ot.IdTicketNavigation)
+                    .ThenInclude(t => t.IdSeatNavigation)
+                .Include(o => o.OrderTickets)
+                    .ThenInclude(ot => ot.IdTicketNavigation)
+                    .ThenInclude(t => t.IdTrainNavigation)
+                    .ThenInclude(tr => tr.IdTrainRouteNavigation)
+                .Where(o => o.IdCus == accountId)
+                .ToListAsync();
+        }
+
         // Uncomment and implement if needed
         /*
         public async Task<bool> ExistsAsync(int id)

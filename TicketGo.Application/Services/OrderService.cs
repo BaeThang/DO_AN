@@ -86,18 +86,21 @@ namespace TicketGo.Application.Services
 
         public async Task CreateOrderAsync(OrderDto orderDto)
         {
+            // Tạo order trước
             var order = new Order
             {
                 UnitPrice = orderDto.TotalPrice,
                 DateOrder = orderDto.DateOrder ?? DateTime.Now,
-                NameCus = orderDto.NameCus,
-                Phone = orderDto.Phone,
+                NameCus = orderDto.NameCus ?? string.Empty,
+                Phone = orderDto.Phone ?? string.Empty,
                 IdCus = orderDto.IdAccount,
-                IdDiscount = orderDto.IdDiscount ?? null
+                IdDiscount = orderDto.IdDiscount,
+                IdTicket = 0 // Tạm thời set = 0, sẽ update sau
             };
 
             await _orderRepository.AddAsync(order);
 
+            // Tạo tickets và order tickets
             foreach (var seatName in orderDto.ListSeats)
             {
                 if (orderDto.IdCoach == null)
@@ -105,23 +108,26 @@ namespace TicketGo.Application.Services
 
                 var seat = await _seatRepository.GetByNameAndCoachIdAsync(seatName, orderDto.IdCoach.Value);
 
-    
                 if (seat != null)
                 {
+                    // Cập nhật trạng thái ghế
                     seat.State = true;
                     await _seatRepository.UpdateAsync(seat);
+                    
                     var coach = await _coachRepository.GetCoachWithRelatedDataAsync(seat.IdCoach);
 
+                    // Tạo ticket
                     var ticket = new Ticket
                     {
                         Date = DateTime.Now,
                         Price = orderDto.TotalPrice ?? 0,
-                        IdSeat = seat.IdSeat.Value,
-                        IdTrain = coach.IdTrain.Value
+                        IdSeat = seat.IdSeat ?? 0,
+                        IdTrain = coach?.IdTrain ?? 0
                     };
 
                     await _ticketRepository.AddAsync(ticket);
 
+                    // Tạo order ticket
                     var orderTicket = new OrderTicket
                     {
                         IdOrder = order.IdOrder,
@@ -129,6 +135,13 @@ namespace TicketGo.Application.Services
                     };
 
                     await _orderTicketRepository.AddAsync(orderTicket);
+                    
+                    // Cập nhật IdTicket cho order (lấy ticket đầu tiên)
+                    if (order.IdTicket == 0)
+                    {
+                        order.IdTicket = ticket.IdTicket;
+                        await _orderRepository.UpdateAsync(order);
+                    }
                 }
             }
         }
@@ -182,5 +195,58 @@ namespace TicketGo.Application.Services
             await _orderRepository.DeleteAsync(id);
         }
 
+        public async Task<List<OrderDto>> GetOrdersByAccountIdAsync(int accountId)
+        {
+            var orders = await _orderRepository.GetOrdersByAccountIdAsync(accountId);
+            var result = new List<OrderDto>();
+            
+            foreach (var order in orders)
+            {
+                var orderDto = new OrderDto
+                {
+                    IdOrder = order.IdOrder,
+                    TotalPrice = order.UnitPrice,
+                    DateOrder = order.DateOrder,
+                    IdTicket = order.IdTicket,
+                    IdDiscount = order.IdDiscount,
+                    DiscountName = order.IdDiscountNavigation?.IdDiscount.ToString(),
+                    NameCus = order.NameCus ?? string.Empty,
+                    Phone = order.Phone ?? string.Empty,
+                    IdAccount = order.IdCus,
+                    ListSeats = new List<string>(),
+                    Status = "Active" // Mặc định là Active
+                };
+
+                // Lấy thông tin ghế và tuyến đường từ OrderTicket
+                foreach (var orderTicket in order.OrderTickets)
+                {
+                    var ticket = orderTicket.IdTicketNavigation;
+                    if (ticket != null && ticket.IdSeatNavigation != null)
+                    {
+                        orderDto.ListSeats.Add(ticket.IdSeatNavigation.NameSeat);
+                        orderDto.IdCoach = ticket.IdSeatNavigation.IdCoach;
+                        
+                        // Lấy thông tin tàu và tuyến đường
+                        var train = ticket.IdTrainNavigation;
+                        if (train != null)
+                        {
+                            orderDto.TrainName = train.NameTrain;
+                            orderDto.DepartureTime = train.DateStart;
+                            
+                            var trainRoute = train.IdTrainRouteNavigation;
+                            if (trainRoute != null)
+                            {
+                                orderDto.PointStart = trainRoute.PointStart;
+                                orderDto.PointEnd = trainRoute.PointEnd;
+                            }
+                        }
+                    }
+                }
+
+                result.Add(orderDto);
+            }
+
+            return result;
+        }
     }
 }

@@ -1,4 +1,6 @@
-﻿@{
+﻿@model List<TicketGo.Application.DTOs.OrderDto>
+
+@{
     Layout = "Master_layout";
 }
 
@@ -12,30 +14,56 @@
     <style>
         .ticket {
             display: flex;
-            border: 1px solid #e2e8f0; /* Màu viền */
-            border-radius: 10px;
-            background-color: #fff7e0; /* Màu nền vàng nhạt */
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1); /* Đổ bóng */
-            transition: box-shadow 0.3s ease; /* Hiệu ứng transition cho bóng */
-            max-width: 700px; /* Điều chỉnh chiều rộng tối đa */
-            margin: 20px auto; /* Căn giữa trang */
-            padding: 15px;
+            border: 1px solid #e2e8f0;
+            border-radius: 15px;
+            background: linear-gradient(135deg, #f7fee7 0%, #ecfccb 100%);
+            box-shadow: 0 8px 25px rgba(163, 230, 53, 0.15);
+            transition: all 0.3s ease;
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
         }
 
-            .ticket:hover {
-                box-shadow: 0 8px 16px rgba(0,0,0,0.1); /* Hiệu ứng bóng khi hover */
-            }
+
+
+        .ticket:hover {
+            box-shadow: 0 12px 35px rgba(163, 230, 53, 0.25);
+            transform: translateY(-2px);
+        }
 
         .left-part {
-            flex: 2; /* Phần bên trái chiếm 2/3 khoảng trống */
-            padding-right: 20px;
+            flex: 2;
+            padding-right: 30px;
+            position: relative;
+        }
+
+        .left-part::after {
+            content: '';
+            position: absolute;
+            right: 15px;
+            top: 10%;
+            bottom: 10%;
+            width: 2px;
+            background: repeating-linear-gradient(
+                to bottom,
+                #d1d5db 0px,
+                #d1d5db 8px,
+                transparent 8px,
+                transparent 16px
+            );
         }
 
         .right-part {
-            flex: 1; /* Phần bên phải chiếm 1/3 khoảng trống */
+            flex: 1;
             display: flex;
             justify-content: center;
             align-items: center;
+            background: rgba(255, 255, 255, 0.7);
+            border-radius: 12px;
+            padding: 20px;
+            margin-left: 10px;
         }
 
         .ticket-header {
@@ -54,95 +82,173 @@
         .company-info {
             flex-grow: 1;
             text-align: center;
+            margin-bottom: 15px;
         }
 
-            .company-info h4 {
-                font-size: 1.2rem;
-                margin-bottom: 5px;
-                color: #2d3748;
-            }
-
-            .company-info p {
-                font-size: 0.9rem;
-                color: #4a5568;
-                margin: 2px;
-            }
+        .company-info h4 {
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: #1f2937;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+        }
 
         .ticket-content {
-            padding-left: 40px;
-            padding-right: 40px;
-            margin-bottom: 10px;
+            padding: 0 20px;
+            margin-bottom: 15px;
         }
 
         .route {
             text-align: center;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 10px;
+            border: 1px solid rgba(163, 230, 53, 0.3);
         }
 
-            .route p {
-                font-size: 1.5rem;
-                font-weight: 600;
-                margin: 0px;
-                color: #2d3748; /* Màu chữ */
-            }
+        .route p {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin: 0;
+            color: #365314;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+        }
 
         .info-block {
             display: flex;
             justify-content: space-between;
-            padding: 0 10px; /* Khoảng cách giữa các block */
-            margin-bottom: 5px;
+            padding: 12px 15px;
+            margin-bottom: 8px;
+            background: rgba(255, 255, 255, 0.6);
+            border-radius: 8px;
+            border-left: 4px solid #a3e635;
         }
 
-            .info-block p {
-                margin: 0px;
-                font-size: 0.9rem;
-                color: #4a5568; /* Màu chữ */
-            }
+        .info-block p {
+            margin: 0;
+            font-size: 0.95rem;
+            color: #374151;
+            font-weight: 500;
+        }
+
+        .info-block strong {
+            color: #1f2937;
+            font-weight: 600;
+        }
 
         .info-date {
-            text-align: right;
-            padding-right: 10px;
+            text-align: center;
+            padding: 15px;
+            background: rgba(163, 230, 53, 0.1);
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border: 1px solid rgba(163, 230, 53, 0.3);
         }
 
-            .info-date p {
-                margin-bottom: 3px;
-                margin-top: 3px;
-                font-size: 0.9rem;
-                color: #4a5568; /* Màu chữ */
-            }
+        .info-date p {
+            margin: 5px 0;
+            font-size: 0.95rem;
+            color: #365314;
+            font-weight: 500;
+        }
 
         .ticket-footer {
-            margin-top: 10px;
-            font-size: 0.8rem;
+            margin-top: 20px;
+            padding: 15px;
+            font-size: 0.85rem;
             text-align: center;
-            color: #6b7280; /* Màu chữ */
+            color: #6b7280;
+            background: rgba(107, 114, 128, 0.1);
+            border-radius: 8px;
+            border: 1px solid rgba(107, 114, 128, 0.2);
         }
 
-            .ticket-footer p {
-                margin: 0px;
-            }
+        .ticket-footer p {
+            margin: 5px 0;
+            font-style: italic;
+        }
 
         .qr-code {
             text-align: center;
+            padding: 10px;
         }
 
-            .qr-code img {
-                width: 120px; /* Kích thước QR code */
-                height: 120px;
-                border-radius: 5px; /* Bo tròn cho QR code */
-                margin-bottom: 5px;
-            }
+        .qr-code img {
+            width: 140px;
+            height: 140px;
+            border-radius: 12px;
+            border: 3px solid #a3e635;
+            margin-bottom: 10px;
+            box-shadow: 0 4px 12px rgba(163, 230, 53, 0.3);
+            transition: transform 0.3s ease;
+        }
 
-            .qr-code p {
-                font-size: 0.8rem;
-                color: #4a5568; /* Màu chữ */
-            }
+        .qr-code img:hover {
+            transform: scale(1.05);
+        }
+
+        .qr-code p {
+            font-size: 0.85rem;
+            color: #374151;
+            margin: 5px 0;
+            font-weight: 500;
+        }
+
+        .qr-code p:first-of-type {
+            font-weight: 600;
+            color: #1f2937;
+        }
 
         .price {
-            font-size: 1.2rem;
-            font-weight: 600;
-            color: #e53e3e; /* Màu chữ giá */
-            text-align: right;
-            padding-right: 10px;
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #dc2626;
+            text-align: center;
+            padding: 15px;
+            background: rgba(220, 38, 38, 0.1);
+            border-radius: 8px;
+            margin-top: 10px;
+            border: 1px solid rgba(220, 38, 38, 0.3);
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+        }
+
+        .no-tickets {
+            text-align: center;
+            color: #6b7280;
+            font-style: italic;
+            margin: 60px 0;
+            padding: 40px;
+            background: rgba(107, 114, 128, 0.05);
+            border-radius: 12px;
+            border: 2px dashed #d1d5db;
+        }
+
+        .no-tickets p {
+            font-size: 1.1rem;
+            margin-bottom: 0;
+        }
+
+        /* Responsive */
+        @@media (max-width: 768px) {
+            .ticket {
+                flex-direction: column;
+                max-width: 100%;
+                margin: 15px;
+            }
+
+            .left-part::after {
+                display: none;
+            }
+
+            .right-part {
+                margin-left: 0;
+                margin-top: 20px;
+            }
+
+            .route p {
+                font-size: 1.4rem;
+            }
         }
     </style>
 
@@ -165,55 +271,100 @@
 
         <div class="tab-content mt-4" id="ticketTabContent">
             <div class="tab-pane fade show active" id="current-tickets" role="tabpanel" aria-labelledby="current-tickets-tab">
-
-                @*   ticket *@
-                <div class="ticket">
-                    <div class="left-part">
-                        <div class="ticket-header">
-                            <div class="company-info">
-                                <h4>Thông tin vé xe</h4>
-
+                @if (Model != null && Model.Any())
+                {
+                    @foreach (var order in Model)
+                    {
+                        <div class="ticket">
+                            <div class="left-part">
+                                <div class="ticket-header">
+                                    <div class="company-info">
+                                        <h4>Thông tin vé xe</h4>
+                                    </div>
+                                </div>
+                                <div class="ticket-content">
+                                    <div class="route">
+                                        @if (!string.IsNullOrEmpty(order.PointStart) && !string.IsNullOrEmpty(order.PointEnd))
+                                        {
+                                            <p>@order.PointStart → @order.PointEnd</p>
+                                        }
+                                        else
+                                        {
+                                            <p>Chuyến đi</p>
+                                        }
+                                    </div>
+                                    <div class="info-date">
+                                        <p><strong>Ngày đặt:</strong> @order.DateOrder?.ToString("dd/MM/yyyy")</p>
+                                        @if (order.DepartureTime.HasValue)
+                                        {
+                                            <p><strong>Ngày khởi hành:</strong> @order.DepartureTime?.ToString("dd/MM/yyyy HH:mm")</p>
+                                        }
+                                    </div>
+                                    <div class="info-block">
+                                        <p><strong>Mã đơn hàng:</strong> @order.IdOrder</p>
+                                        <p><strong>Tên khách hàng:</strong> @order.NameCus</p>
+                                    </div>
+                                    <div class="info-block">
+                                        <p><strong>Số điện thoại:</strong> @order.Phone</p>
+                                        @if (!string.IsNullOrEmpty(order.TrainName))
+                                        {
+                                            <p><strong>Tàu:</strong> @order.TrainName</p>
+                                        }
+                                    </div>
+                                    @if (order.ListSeats.Any())
+                                    {
+                                        <div class="info-block">
+                                            <p><strong>Ghế:</strong> @string.Join(", ", order.ListSeats)</p>
+                                        </div>
+                                    }
+                                    <div class="price">
+                                        Giá: @order.TotalPrice?.ToString("N0") VND
+                                    </div>
+                                </div>
+                                <div class="ticket-footer">
+                                    <p><em>Cam kết: Chúng tôi cam kết cung cấp dịch vụ chất lượng nhất!</em></p>
+                                    <p><em>Cảm ơn quý khách đã sử dụng dịch vụ của chúng tôi.</em></p>
+                                </div>
+                            </div>
+                            <div class="right-part">
+                                <div class="qr-code">
+                                    @{
+                                        var route = (!string.IsNullOrEmpty(order.PointStart) && !string.IsNullOrEmpty(order.PointEnd)) 
+                                            ? $"{order.PointStart} → {order.PointEnd}" : "Chuyến đi";
+                                        
+                                        // Tạo QR code data với thông tin chi tiết
+                                        var uniqueCode = $"TG{order.IdOrder}{DateTime.Now.Ticks.ToString().Substring(8)}";
+                                        var qrData = $"Vé xe TicketGo\nMã vé: {order.IdOrder}\nKhách hàng: {order.NameCus ?? "Khách hàng"}\nSĐT: {order.Phone ?? "N/A"}\nTuyến: {route}\nNgày đặt: {order.DateOrder?.ToString("dd/MM/yyyy")}\nGiá: {order.TotalPrice?.ToString("N0")} VND\nMã xác thực: {uniqueCode}";
+                                        
+                                        // Tạo URL QR code từ API
+                                        var qrUrl = $"https://api.qrserver.com/v1/create-qr-code/?size=140x140&data={Uri.EscapeDataString(qrData)}&color=365314&bgcolor=F7FEE7&format=png&ecc=M";
+                                    }
+                                    
+                                    <img src="@qrUrl" alt="QR Code Vé" style="width: 140px; height: 140px; border: 3px solid #a3e635; border-radius: 12px;" onerror="this.src='https://via.placeholder.com/140/F7FEE7/365314?text=QR'">
+                                    
+                                    <p>Mã vé: @order.IdOrder</p>
+                                    <p style="font-size: 0.7rem; color: #666;">Quét để xem chi tiết</p>
+                                </div>
                             </div>
                         </div>
-                        <div class="ticket-content">
-                            <div class="route">
-                                <p>Hanoi - Ho Chi Minh City</p>
-                            </div>
-                            <div class="info-date">
-                                <p><strong>Ngày đi:</strong> 2024-06-25</p>
-                            </div>
-                            <div class="info-block">
-                                <p><strong>Mã số vé:</strong> 123456</p>
-                                <p><strong>Mã số xe:</strong> 7890</p>
-                            </div>
-                            <div class="info-block">
-                                <p><strong>Ghế ngồi:</strong> A12</p>
-                            </div>
-                            <div class="price">
-                                Giá: 10,000,000 VND
-                            </div>
-                        </div>
-                        <div class="ticket-footer">
-                            <p><em>Cam kết: Chúng tôi cam kết cung cấp dịch vụ chất lượng nhất!</em></p>
-                            <p><em>Cảm ơn quý khách đã sử dụng dịch vụ của chúng tôi.</em></p>
-                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="no-tickets">
+                        <p>Bạn chưa có vé nào được đặt.</p>
                     </div>
-                    <div class="right-part">
-                        <div class="qr-code">
-                            <img src="https://via.placeholder.com/120" alt="QR Code">
-                            <p>Chi tiết vé xe</p>
-                        </div>
-                    </div>
-                </div>
-
-
-
+                }
             </div>
             <div class="tab-pane fade" id="cancelled-tickets" role="tabpanel" aria-labelledby="cancelled-tickets-tab">
-                <!-- Cancelled tickets content -->
+                <div class="no-tickets">
+                    <p>Chưa có vé nào bị hủy.</p>
+                </div>
             </div>
             <div class="tab-pane fade" id="used-tickets" role="tabpanel" aria-labelledby="used-tickets-tab">
-                <!-- Used tickets content -->
+                <div class="no-tickets">
+                    <p>Chưa có vé nào đã sử dụng.</p>
+                </div>
             </div>
         </div>
     </div>
@@ -221,5 +372,3 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
-
-

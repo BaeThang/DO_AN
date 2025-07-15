@@ -6,6 +6,7 @@ namespace TicketGo.Domain.Interfaces
     {
         Task<List<Order>> GetAllAsync();
         Task<Order> GetByIdAsync(int id);
+        Task<List<Order>> GetOrdersByAccountIdAsync(int accountId);
         Task AddAsync(Order order);
         Task UpdateAsync(Order order);
         Task DeleteAsync(int id);
