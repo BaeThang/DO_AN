@@ -48,6 +48,7 @@ builder.Services.AddScoped<ITrainRouteService, TrainRouteService>();
 builder.Services.AddScoped<IDiscountService, DiscountService>();
 builder.Services.AddScoped<ISeatService, SeatService>();
 builder.Services.AddScoped<IResendService, ResendService>();
+builder.Services.AddScoped<IDashboardService, DashboardService>();
 
 builder.Services.AddScoped<IEmailSender, EmailSender>();
 builder.Services.AddScoped<IVNPayService, VNPayService>();
